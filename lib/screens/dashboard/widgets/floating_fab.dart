@@ -7,6 +7,7 @@ class FloatingFab extends StatefulWidget {
   final VoidCallback onTransfer;
   final VoidCallback onNote;
   final VoidCallback onLimit;
+  final VoidCallback onChatbot;
 
   const FloatingFab({
     super.key,
@@ -15,6 +16,7 @@ class FloatingFab extends StatefulWidget {
     required this.onTransfer,
     required this.onNote,
     required this.onLimit,
+    required this.onChatbot,
   });
 
   @override
@@ -54,11 +56,12 @@ class _FloatingFabState extends State<FloatingFab>
       _Action("Thu nhập", Icons.trending_up, [Colors.green, Colors.teal], widget.onIncome),
       _Action("Ghi chép", Icons.description, [Colors.indigo, Colors.purple], widget.onNote),
       _Action("Hũ chi tiêu", Icons.flag, [Colors.orange, Colors.amber], widget.onLimit),
+      _Action("Chatbot", Icons.smart_toy, [Colors.cyan, Colors.blue], widget.onChatbot),
     ];
 
     return SizedBox(
       width: 260,
-      height: 380,
+      height: 450,
       child: Stack(
         alignment: Alignment.bottomRight,
         clipBehavior: Clip.none,

@@ -2,24 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '/models/category.dart';
 import '/services/record_api.dart';
-import '/utils/money_input_formatter.dart'; // formatter dấu phẩy bạn đã làm
+import '/utils/money_input_formatter.dart';
 import '../widgets/category_grid.dart';
 
 enum PayMode { personal, group }
 
 class RecordModal {
   static Future<bool?> open(
-    BuildContext context, {
-    String? selectedCategoryId,
-    String? groupId, // <<< THÊM: để truyền ID nhóm từ bên ngoài
-  }) {
+      BuildContext context, {
+        String? selectedCategoryId,
+        String? groupId,
+        int? prefilledAmount,
+        String? prefilledNote,
+      }) {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _RecordModalSheet(
         selectedCategoryId: selectedCategoryId,
-        groupId: groupId, // <<< THÊM: truyền vào sheet
+        groupId: groupId,
+        prefilledAmount: prefilledAmount,
+        prefilledNote: prefilledNote,
       ),
     );
   }
@@ -27,8 +31,16 @@ class RecordModal {
 
 class _RecordModalSheet extends StatefulWidget {
   final String? selectedCategoryId;
-  final String? groupId; // <<< THÊM
-  const _RecordModalSheet({this.selectedCategoryId, this.groupId});
+  final String? groupId;
+  final int? prefilledAmount;
+  final String? prefilledNote;
+
+  const _RecordModalSheet({
+    this.selectedCategoryId,
+    this.groupId,
+    this.prefilledAmount,
+    this.prefilledNote,
+  });
 
   @override
   State<_RecordModalSheet> createState() => _RecordModalSheetState();
@@ -69,10 +81,18 @@ class _RecordModalSheetState extends State<_RecordModalSheet> {
     super.initState();
     categoryId = widget.selectedCategoryId;
 
+    // Điền sẵn từ scan hóa đơn
+    if (widget.prefilledAmount != null && widget.prefilledAmount! > 0) {
+      amountCtl.text = NumberFormat.decimalPattern().format(widget.prefilledAmount);
+    }
+    if (widget.prefilledNote != null && widget.prefilledNote!.isNotEmpty) {
+      noteCtl.text = widget.prefilledNote!;
+    }
+
     if (isLockedToGroup) {
       mode = PayMode.group;
       selectedGroupId = widget.groupId;
-      tab = "category"; // ưu tiên chọn danh mục khi đã có nhóm
+      tab = "category";
     }
 
     _init();

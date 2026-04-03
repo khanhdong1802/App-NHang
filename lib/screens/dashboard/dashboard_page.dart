@@ -21,6 +21,7 @@ import '../dashboard/jar_budget_page.dart';
 import '../dashboard/admin_page.dart';
 import 'package:doanmonhoc/providers/chat_provider.dart';
 import 'package:provider/provider.dart';
+import 'chatbot_screen.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -302,6 +303,12 @@ class _DashboardPageState extends State<DashboardPage> {
             MaterialPageRoute(builder: (_) => const JarBudgetPage()),
           );
           _loadAll();
+        },
+        onChatbot: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ChatbotScreen()),
+          );
         },
       ),
       body: RefreshIndicator(

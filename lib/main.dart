@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'providers/chatbot_provider.dart';
 
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
@@ -24,6 +25,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()..restoreSession()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => ChatbotProvider()),
+        ChangeNotifierProvider(create: (_) => ChatbotProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

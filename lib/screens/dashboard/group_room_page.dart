@@ -9,6 +9,7 @@ import 'modals/record_modal.dart';
 import 'group_members_page.dart';
 import '../dashboard/group_chat_screen.dart';
 import 'group_transaction_history_page.dart';
+import 'chatbot_screen.dart';
 class GroupRoomPage extends StatefulWidget {
   final String groupId;
   final Future<String?> Function()? tokenProvider;
@@ -150,6 +151,12 @@ class _GroupRoomPageState extends State<GroupRoomPage> {
         onTransfer: () => _toast("Chức năng này không áp dụng cho nhóm"),
         onNote: () => _toast("Chức năng này không áp dụng cho nhóm"),
         onLimit: () => _toast("Chức năng này không áp dụng cho nhóm"),
+        onChatbot: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ChatbotScreen()),
+          );
+        },
       ),
       body: RefreshIndicator(
         onRefresh: _load,
