@@ -44,7 +44,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         SnackBar(content: Text(result.message)),
       );
 
-      // giống React: đăng ký xong -> chuyển qua login
       Navigator.pushReplacementNamed(context, "/login");
     } catch (e) {
       if (!mounted) return;
@@ -61,121 +60,182 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final w = MediaQuery.sizeOf(context).width;
     final isWide = w >= 520;
 
-    const accent = Color(0xFF34D399); // emerald
-    const accent2 = Color(0xFF2DD4BF); // teal
+    const primary = Color(0xFF5B5FEF);
+    const secondary = Color(0xFF7B61FF);
+    const success = Color(0xFF22C55E);
+    const bg = Color(0xFFF8FAFC);
+    const cardBg = Colors.white;
+    const textDark = Color(0xFF111827);
+    const textMuted = Color(0xFF6B7280);
+    const inputFill = Color(0xFFF3F4F6);
+    const stroke = Color(0xFFE5E7EB);
 
     return Scaffold(
+      backgroundColor: bg,
       body: Stack(
         children: [
-          // Background gradient
           Container(
+            height: 320,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0B1220),
-                  Color(0xFF070A12),
-                  Color(0xFF0B1220),
-                ],
+                colors: [secondary, primary],
               ),
             ),
           ),
 
-          // Glow blobs
-          _GlowBlob(
-            alignment: const Alignment(1.15, -1.15),
-            size: 290,
-            color: const Color(0x4D10B981), // emerald 30%
-            blur: 70,
-            durationMs: 2200,
-          ),
-          _GlowBlob(
-            alignment: const Alignment(-1.20, 1.20),
-            size: 320,
-            color: const Color(0x4D6366F1), // indigo 30%
-            blur: 75,
-            durationMs: 2600,
-          ),
-
-          // Ring
-          Center(
+          Positioned(
+            top: -40,
+            right: -40,
             child: Container(
-              width: 380,
-              height: 380,
+              width: 180,
+              height: 180,
               decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.10),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0x1A34D399), width: 1),
               ),
             ),
-          ).animate().fadeIn(duration: 600.ms),
+          ),
+
+          Positioned(
+            top: 130,
+            left: -55,
+            child: Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
 
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 460),
+                  constraints: const BoxConstraints(maxWidth: 440),
                   child: Column(
                     children: [
-                      // Header
-                      Column(
-                        children: [
-                          _Badge(
-                            text: "Personal Finance App",
-                            accent: accent,
-                          ).animate().fadeIn(duration: 350.ms).slideY(begin: -0.1),
-                          const SizedBox(height: 10),
-                          Text(
-                            "Tạo tài khoản mới",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: isWide ? 34 : 30,
-                              fontWeight: FontWeight.w800,
+                      Container(
+                        width: 82,
+                        height: 82,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.10),
+                              blurRadius: 24,
+                              offset: const Offset(0, 10),
                             ),
-                            textAlign: TextAlign.center,
-                          ).animate().fadeIn(duration: 450.ms).slideY(begin: -0.08),
-                          const SizedBox(height: 6),
-                          const Text(
-                            "Quản lý chi tiêu hiệu quả hơn cùng chúng tôi!",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white70, height: 1.3),
-                          ).animate().fadeIn(duration: 550.ms),
-                        ],
-                      ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.person_add_alt_1_rounded,
+                          color: primary,
+                          size: 38,
+                        ),
+                      ).animate().fadeIn(duration: 350.ms).slideY(begin: -0.08),
+
                       const SizedBox(height: 18),
 
-                      // Glass Card
-                      _GlassCard(
+                      Text(
+                        "Tạo tài khoản mới",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isWide ? 30 : 26,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ).animate().fadeIn(duration: 450.ms).slideY(begin: -0.06),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        "Bắt đầu quản lý chi tiêu cá nhân và nhóm một cách thông minh",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.92),
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                      ).animate().fadeIn(duration: 550.ms),
+
+                      const SizedBox(height: 28),
+
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 32,
+                              offset: const Offset(0, 16),
+                            ),
+                          ],
+                        ),
                         child: Form(
                           key: _formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                children: const [
-                                  _AccentLine(color: accent),
-                                  SizedBox(width: 10),
-                                  Text(
+                                children: [
+                                  Container(
+                                    width: 28,
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                      color: success,
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text(
                                     "Đăng ký",
                                     style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16.5,
-                                      fontWeight: FontWeight.w700,
+                                      color: textDark,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 16),
 
-                              const Text("Họ và tên",
-                                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
                               const SizedBox(height: 8),
-                              _GlowTextField(
-                                accent: accent,
+
+                              const Text(
+                                "Điền thông tin bên dưới để tạo tài khoản mới",
+                                style: TextStyle(
+                                  color: textMuted,
+                                  fontSize: 14,
+                                  height: 1.4,
+                                ),
+                              ),
+
+                              const SizedBox(height: 22),
+
+                              const Text(
+                                "Họ và tên",
+                                style: TextStyle(
+                                  color: textDark,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              _FinanceTextField(
                                 controller: _nameCtrl,
-                                hintText: "Họ Tên",
+                                hintText: "Nhập họ và tên",
                                 prefixIcon: Icons.person_outline_rounded,
+                                fillColor: inputFill,
+                                borderColor: stroke,
+                                focusColor: primary,
                                 validator: (v) {
                                   final value = (v ?? "").trim();
                                   if (value.isEmpty) return "Vui lòng nhập họ tên";
@@ -184,17 +244,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 },
                               ),
 
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 16),
 
-                              const Text("Email",
-                                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                              const Text(
+                                "Email",
+                                style: TextStyle(
+                                  color: textDark,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
                               const SizedBox(height: 8),
-                              _GlowTextField(
-                                accent: accent,
+
+                              _FinanceTextField(
                                 controller: _emailCtrl,
                                 hintText: "you@example.com",
                                 keyboardType: TextInputType.emailAddress,
                                 prefixIcon: Icons.mail_outline_rounded,
+                                fillColor: inputFill,
+                                borderColor: stroke,
+                                focusColor: primary,
                                 validator: (v) {
                                   final value = (v ?? "").trim();
                                   if (value.isEmpty) return "Vui lòng nhập email";
@@ -203,60 +272,139 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 },
                               ),
 
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 16),
 
-                              const Text("Mật khẩu",
-                                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                              const Text(
+                                "Mật khẩu",
+                                style: TextStyle(
+                                  color: textDark,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
                               const SizedBox(height: 8),
-                              _GlowTextField(
-                                accent: accent,
+
+                              _FinanceTextField(
                                 controller: _passCtrl,
-                                hintText: "••••••••",
+                                hintText: "Nhập mật khẩu",
                                 obscureText: !_showPassword,
                                 prefixIcon: Icons.lock_outline_rounded,
+                                fillColor: inputFill,
+                                borderColor: stroke,
+                                focusColor: primary,
                                 suffix: IconButton(
-                                  onPressed: () => setState(() => _showPassword = !_showPassword),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showPassword = !_showPassword;
+                                    });
+                                  },
                                   icon: Icon(
-                                    _showPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                                    color: Colors.white60,
+                                    _showPassword
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    color: textMuted,
                                   ),
                                 ),
                                 validator: (v) {
                                   if ((v ?? "").isEmpty) return "Vui lòng nhập mật khẩu";
-                                  if ((v ?? "").length < 6) return "Mật khẩu tối thiểu 6 ký tự";
+                                  if ((v ?? "").length < 6) {
+                                    return "Mật khẩu tối thiểu 6 ký tự";
+                                  }
                                   return null;
                                 },
                               ),
 
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 22),
 
                               SizedBox(
                                 width: double.infinity,
-                                height: 46,
-                                child: _GradientButton(
-                                  accent: accent,
-                                  accent2: accent2,
-                                  isLoading: _isSubmitting,
-                                  onPressed: _isSubmitting ? null : _handleRegister,
-                                  text: _isSubmitting ? "Đang đăng ký..." : "Đăng ký",
+                                height: 54,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [secondary, primary],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: primary.withOpacity(0.28),
+                                        blurRadius: 18,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: _isSubmitting ? null : _handleRegister,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      foregroundColor: Colors.white,
+                                      disabledBackgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                    child: _isSubmitting
+                                        ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.4,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                        : const Text(
+                                      "Đăng ký",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
 
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 16),
 
                               Center(
                                 child: TextButton(
-                                  onPressed: () => Navigator.pushReplacementNamed(context, "/login"),
-                                  child: const Text(
-                                    "Đã có tài khoản? Đăng nhập ngay",
-                                    style: TextStyle(color: Color(0xFF6EE7B7), fontWeight: FontWeight.w600),
+                                  onPressed: () =>
+                                      Navigator.pushReplacementNamed(context, "/login"),
+                                  child: const Text.rich(
+                                    TextSpan(
+                                      text: "Đã có tài khoản? ",
+                                      style: TextStyle(
+                                        color: textMuted,
+                                        fontSize: 14,
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: "Đăng nhập ngay",
+                                          style: TextStyle(
+                                            color: primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ).animate().fadeIn(duration: 650.ms).slideY(begin: 0.06),
+                      ).animate().fadeIn(duration: 650.ms).slideY(begin: 0.05),
+
+                      const SizedBox(height: 18),
+
+                      Text(
+                        "Dữ liệu của bạn sẽ được bảo mật và đồng bộ an toàn",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.88),
+                          fontSize: 12.5,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -269,49 +417,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
-/* ------- Widgets ------- */
-
-class _GlassCard extends StatelessWidget {
-  final Widget child;
-  const _GlassCard({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        color: const Color(0x0DFFFFFF),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
-        boxShadow: const [
-          BoxShadow(
-            blurRadius: 50,
-            offset: Offset(0, 18),
-            color: Color(0xB0000000),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: const Color(0x0DFFFFFF)),
-                ),
-              ),
-            ),
-          ),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _GlowTextField extends StatefulWidget {
-  final Color accent;
+class _FinanceTextField extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
   final TextInputType? keyboardType;
@@ -319,12 +425,17 @@ class _GlowTextField extends StatefulWidget {
   final IconData prefixIcon;
   final Widget? suffix;
   final String? Function(String?)? validator;
+  final Color fillColor;
+  final Color borderColor;
+  final Color focusColor;
 
-  const _GlowTextField({
-    required this.accent,
+  const _FinanceTextField({
     required this.controller,
     required this.hintText,
     required this.prefixIcon,
+    required this.fillColor,
+    required this.borderColor,
+    required this.focusColor,
     this.keyboardType,
     this.obscureText = false,
     this.suffix,
@@ -332,226 +443,77 @@ class _GlowTextField extends StatefulWidget {
   });
 
   @override
-  State<_GlowTextField> createState() => _GlowTextFieldState();
+  State<_FinanceTextField> createState() => _FinanceTextFieldState();
 }
 
-class _GlowTextFieldState extends State<_GlowTextField> {
+class _FinanceTextFieldState extends State<_FinanceTextField> {
   bool _focused = false;
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = _focused ? widget.accent : const Color(0xB33B4A66);
-    final glow = _focused ? widget.accent.withOpacity(0.35) : Colors.transparent;
-
-    return AnimatedContainer(
-      duration: 160.ms,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-            color: glow,
-          ),
-        ],
-      ),
-      child: Focus(
-        onFocusChange: (v) => setState(() => _focused = v),
+    return Focus(
+      onFocusChange: (v) => setState(() => _focused = v),
+      child: AnimatedContainer(
+        duration: 180.ms,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            if (_focused)
+              BoxShadow(
+                color: widget.focusColor.withOpacity(0.12),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+          ],
+        ),
         child: TextFormField(
           controller: widget.controller,
           keyboardType: widget.keyboardType,
           obscureText: widget.obscureText,
           validator: widget.validator,
-          style: const TextStyle(color: Colors.white, fontSize: 14.5),
+          style: const TextStyle(
+            color: Color(0xFF111827),
+            fontSize: 14.5,
+          ),
           decoration: InputDecoration(
             hintText: widget.hintText,
-            hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+            hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
             filled: true,
-            fillColor: const Color(0x9920283A),
-            prefixIcon: Icon(widget.prefixIcon, color: _focused ? widget.accent : Colors.white54),
+            fillColor: widget.fillColor,
+            prefixIcon: Icon(
+              widget.prefixIcon,
+              color: _focused ? widget.focusColor : const Color(0xFF6B7280),
+            ),
             suffixIcon: widget.suffix,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: borderColor, width: 1),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: widget.borderColor),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: widget.accent, width: 1.2),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: widget.focusColor,
+                width: 1.4,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Colors.redAccent),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: Colors.redAccent,
+                width: 1.4,
+              ),
             ),
           ),
         ),
       ),
     );
-  }
-}
-
-class _GradientButton extends StatefulWidget {
-  final Color accent;
-  final Color accent2;
-  final VoidCallback? onPressed;
-  final String text;
-  final bool isLoading;
-
-  const _GradientButton({
-    required this.accent,
-    required this.accent2,
-    required this.onPressed,
-    required this.text,
-    required this.isLoading,
-  });
-
-  @override
-  State<_GradientButton> createState() => _GradientButtonState();
-}
-
-class _GradientButtonState extends State<_GradientButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final disabled = widget.onPressed == null;
-
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: disabled ? null : widget.onPressed,
-      child: AnimatedContainer(
-        duration: 120.ms,
-        transform: Matrix4.translationValues(0, _pressed ? 2 : 0, 0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [widget.accent, widget.accent2],
-          ),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: _pressed ? 18 : 28,
-              offset: const Offset(0, 14),
-              color: widget.accent.withOpacity(0.45),
-            )
-          ],
-        ),
-        child: Center(
-          child: widget.isLoading
-              ? Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-              ),
-              SizedBox(width: 10),
-              Text("Đang đăng ký...",
-                  style: TextStyle(color: Color(0xFF0B1220), fontWeight: FontWeight.w800)),
-            ],
-          )
-              : Text(
-            widget.text,
-            style: TextStyle(
-              color: disabled ? Colors.black38 : const Color(0xFF0B1220),
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  final String text;
-  final Color accent;
-
-  const _Badge({required this.text, required this.accent});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: accent.withOpacity(0.12),
-        border: Border.all(color: accent.withOpacity(0.35)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: accent),
-              ),
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: accent),
-              )
-                  .animate(onPlay: (c) => c.repeat())
-                  .scale(begin: const Offset(1, 1), end: const Offset(2.1, 2.1), duration: 900.ms)
-                  .fadeOut(begin: 0.55, duration: 900.ms),
-            ],
-          ),
-          const SizedBox(width: 10),
-          Text(
-            text,
-            style: TextStyle(color: accent.withOpacity(0.9), fontSize: 12, fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AccentLine extends StatelessWidget {
-  final Color color;
-  const _AccentLine({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 26,
-      height: 2.5,
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(999)),
-    );
-  }
-}
-
-class _GlowBlob extends StatelessWidget {
-  final Alignment alignment;
-  final double size;
-  final Color color;
-  final double blur;
-  final int durationMs;
-
-  const _GlowBlob({
-    required this.alignment,
-    required this.size,
-    required this.color,
-    required this.blur,
-    required this.durationMs,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: alignment,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      ),
-    )
-        .animate(onPlay: (c) => c.repeat(reverse: true))
-        .scale(begin: const Offset(1, 1), end: const Offset(1.08, 1.08), duration: durationMs.ms)
-        .blurXY(begin: 0, end: blur, duration: durationMs.ms);
   }
 }

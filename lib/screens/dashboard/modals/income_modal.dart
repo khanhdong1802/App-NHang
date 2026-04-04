@@ -28,6 +28,19 @@ class IncomeModal extends StatefulWidget {
 class _IncomeModalState extends State<IncomeModal> {
   final _storage = const FlutterSecureStorage();
 
+  static const Color _primary = Color(0xFF6D5EF9);
+  static const Color _primaryDark = Color(0xFF5B4DF4);
+  static const Color _sheetTop = Color(0xFFF6F3FF);
+  static const Color _sheetBottom = Color(0xFFFCFBFF);
+  static const Color _border = Color(0xFFE8E3F7);
+  static const Color _softBg = Color(0xFFF3F0FF);
+  static const Color _title = Color(0xFF16171D);
+  static const Color _textSoft = Color(0xFF6B7280);
+  static const Color _successSoft = Color(0xFFEEF2FF);
+  static const Color _errorBg = Color(0xFFFFF1F2);
+  static const Color _errorBorder = Color(0xFFFFE4E6);
+  static const Color _errorText = Color(0xFFB91C1C);
+
   IncomeMode mode = IncomeMode.personal;
 
   // form
@@ -241,7 +254,9 @@ class _IncomeModalState extends State<IncomeModal> {
     try {
       final token = await _getToken();
       if (token == null) {
-        if (mounted) setState(() => errorMessage = "Lỗi xác thực. Vui lòng đăng nhập lại.");
+        if (mounted) {
+          setState(() => errorMessage = "Lỗi xác thực. Vui lòng đăng nhập lại.");
+        }
         return;
       }
 
@@ -291,7 +306,9 @@ class _IncomeModalState extends State<IncomeModal> {
         });
       }
     } catch (_) {
-      if (mounted) setState(() => errorMessage = "Lỗi khi gửi dữ liệu đến máy chủ");
+      if (mounted) {
+        setState(() => errorMessage = "Lỗi khi gửi dữ liệu đến máy chủ");
+      }
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -309,7 +326,7 @@ class _IncomeModalState extends State<IncomeModal> {
     final suggestions = _quickMultipliers(base);
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: 10),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -317,7 +334,18 @@ class _IncomeModalState extends State<IncomeModal> {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ActionChip(
-                label: Text(_fmt(v)),
+                backgroundColor: _successSoft,
+                side: const BorderSide(color: _border),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                label: Text(
+                  _fmt(v),
+                  style: const TextStyle(
+                    color: _primaryDark,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 onPressed: () {
                   amountCtl.text = _fmt(v);
                   setState(() {});
@@ -342,53 +370,131 @@ class _IncomeModalState extends State<IncomeModal> {
         maxChildSize: 0.95,
         builder: (_, scrollCtl) {
           return Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFFFDFDFF),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [_sheetTop, _sheetBottom],
+              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              border: Border.all(color: Colors.white.withOpacity(0.9)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 24,
+                  offset: Offset(0, -8),
+                ),
+              ],
             ),
             child: Column(
               children: [
                 const SizedBox(height: 10),
                 Container(
-                  width: 44,
+                  width: 46,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: Colors.black12,
+                    color: const Color(0xFFD8D2F3),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: loading ? null : () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                      const Expanded(
-                        child: Text(
-                          "Ghi thu nhập",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.75),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: _border),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x0C000000),
+                          blurRadius: 18,
+                          offset: Offset(0, 8),
                         ),
-                      ),
-                      FilledButton(
-                        onPressed: loading ? null : _save,
-                        child: Text(loading ? "Đang lưu..." : "Lưu"),
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: _border),
+                          ),
+                          child: IconButton(
+                            onPressed: loading ? null : () => Navigator.pop(context),
+                            icon: const Icon(Icons.close_rounded, color: _title),
+                          ),
+                        ),
+                        const Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                "Ghi thu nhập",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: _title,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+
+                            ],
+                          ),
+                        ),
+                        Container(
+                          height: 42,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [_primary, _primaryDark],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x336D5EF9),
+                                blurRadius: 14,
+                                offset: Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: loading ? null : _save,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 18),
+                            ),
+                            child: Text(
+                              loading ? "Đang lưu..." : "Lưu",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F3F9),
+                      color: _softBg,
                       borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: _border),
                     ),
                     child: Row(
                       children: [
@@ -398,11 +504,11 @@ class _IncomeModalState extends State<IncomeModal> {
                           isLockedToGroup
                               ? null
                               : () {
-                                  setState(() {
-                                    mode = IncomeMode.personal;
-                                    errorMessage = null;
-                                  });
-                                },
+                            setState(() {
+                              mode = IncomeMode.personal;
+                              errorMessage = null;
+                            });
+                          },
                         ),
                         _segBtn(
                           "Nhóm",
@@ -410,13 +516,13 @@ class _IncomeModalState extends State<IncomeModal> {
                           isLockedToGroup
                               ? null
                               : () async {
-                                  setState(() {
-                                    mode = IncomeMode.group;
-                                    errorMessage = null;
-                                  });
-                                  await _loadGroups();
-                                  await _loadGroupFunds();
-                                },
+                            setState(() {
+                              mode = IncomeMode.group;
+                              errorMessage = null;
+                            });
+                            await _loadGroups();
+                            await _loadGroupFunds();
+                          },
                         ),
                       ],
                     ),
@@ -425,18 +531,22 @@ class _IncomeModalState extends State<IncomeModal> {
 
                 if (errorMessage != null)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF1F2),
+                        color: _errorBg,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFFFE4E6)),
+                        border: Border.all(color: _errorBorder),
                       ),
                       child: Text(
                         errorMessage!,
-                        style: const TextStyle(fontSize: 12, color: Color(0xFFB91C1C)),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: _errorText,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
@@ -448,53 +558,98 @@ class _IncomeModalState extends State<IncomeModal> {
                     controller: scrollCtl,
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
                     children: [
-                      _fieldTitle("Số tiền"),
-                      _moneyField(),
-                      _quickSuggestRow(),
-
-                      const SizedBox(height: 14),
-                      _fieldTitle("Nguồn thu"),
-                      _sourceDropdown(),
-
-                      const SizedBox(height: 14),
-                      _fieldTitle("Ngày nhận"),
-                      _datePicker(),
-
-                      if (mode == IncomeMode.group) ...[
-                        const SizedBox(height: 14),
-                        _fieldTitle("Chọn nhóm"),
-                        _groupDropdown(),
-
-                        const SizedBox(height: 14),
-                        _fieldTitle("Chọn quỹ nhóm"),
-                        _fundDropdown(),
-
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: newFundCtl,
-                                decoration: _inputDeco("Tên quỹ mới"),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            FilledButton(
-                              onPressed: (loading || newFundCtl.text.trim().isEmpty || selectedGroupId.isEmpty)
-                                  ? null
-                                  : _addFund,
-                              child: const Text("Thêm quỹ"),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.80),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: _border),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x0A000000),
+                              blurRadius: 18,
+                              offset: Offset(0, 8),
                             ),
                           ],
                         ),
-                      ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _fieldTitle("Số tiền"),
+                            _moneyField(),
+                            _quickSuggestRow(),
 
-                      const SizedBox(height: 14),
-                      _fieldTitle("Ghi chú thêm (nếu có)"),
-                      TextField(
-                        controller: noteCtl,
-                        maxLines: 3,
-                        decoration: _inputDeco("Thêm ghi chú..."),
+                            const SizedBox(height: 16),
+                            _fieldTitle("Nguồn thu"),
+                            _sourceDropdown(),
+
+                            const SizedBox(height: 16),
+                            _fieldTitle("Ngày nhận"),
+                            _datePicker(),
+
+                            if (mode == IncomeMode.group) ...[
+                              const SizedBox(height: 16),
+                              _fieldTitle("Chọn nhóm"),
+                              _groupDropdown(),
+
+                              const SizedBox(height: 16),
+                              _fieldTitle("Chọn quỹ nhóm"),
+                              _fundDropdown(),
+
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: newFundCtl,
+                                      decoration: _inputDeco("Tên quỹ mới"),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [_primary, _primaryDark],
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: ElevatedButton(
+                                      onPressed: (loading ||
+                                          newFundCtl.text.trim().isEmpty ||
+                                          selectedGroupId.isEmpty)
+                                          ? null
+                                          : _addFund,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.transparent,
+                                        shadowColor: Colors.transparent,
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(14),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        "Thêm quỹ",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+
+                            const SizedBox(height: 16),
+                            _fieldTitle("Ghi chú thêm (nếu có)"),
+                            TextField(
+                              controller: noteCtl,
+                              maxLines: 4,
+                              decoration: _inputDeco("Thêm ghi chú..."),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -513,14 +668,24 @@ class _IncomeModalState extends State<IncomeModal> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: Opacity(
-          opacity: onTap == null ? 0.6 : 1,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+          opacity: onTap == null ? 0.55 : 1,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(vertical: 11),
             decoration: BoxDecoration(
-              color: active ? Colors.white : Colors.transparent,
+              gradient: active
+                  ? const LinearGradient(colors: [_primary, _primaryDark])
+                  : null,
+              color: active ? null : Colors.transparent,
               borderRadius: BorderRadius.circular(999),
               boxShadow: active
-                  ? const [BoxShadow(color: Color(0x11000000), blurRadius: 10, offset: Offset(0, 6))]
+                  ? const [
+                BoxShadow(
+                  color: Color(0x226D5EF9),
+                  blurRadius: 12,
+                  offset: Offset(0, 5),
+                )
+              ]
                   : null,
             ),
             child: Text(
@@ -528,7 +693,7 @@ class _IncomeModalState extends State<IncomeModal> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                color: active ? const Color(0xFF4F46E5) : Colors.black54,
+                color: active ? Colors.white : _textSoft,
               ),
             ),
           ),
@@ -538,26 +703,37 @@ class _IncomeModalState extends State<IncomeModal> {
   }
 
   Widget _fieldTitle(String t) => Padding(
-    padding: const EdgeInsets.only(bottom: 6),
-    child: Text(t, style: const TextStyle(fontWeight: FontWeight.w700)),
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(
+      t,
+      style: const TextStyle(
+        fontWeight: FontWeight.w700,
+        fontSize: 13.5,
+        color: _title,
+      ),
+    ),
   );
 
   InputDecoration _inputDeco(String hint) => InputDecoration(
     hintText: hint,
+    hintStyle: const TextStyle(
+      color: Color(0xFF9CA3AF),
+      fontWeight: FontWeight.w500,
+    ),
     filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    fillColor: Colors.white.withOpacity(0.96),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      borderSide: const BorderSide(color: _border),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      borderSide: const BorderSide(color: _border),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.4),
+      borderSide: const BorderSide(color: _primary, width: 1.5),
     ),
   );
 
@@ -568,10 +744,14 @@ class _IncomeModalState extends State<IncomeModal> {
       inputFormatters: [MoneyInputFormatter()],
       decoration: _inputDeco("0").copyWith(
         suffixText: "đ",
-        suffixStyle: const TextStyle(fontSize: 12, color: Colors.black45),
+        suffixStyle: const TextStyle(
+          fontSize: 12,
+          color: Color(0xFF6B7280),
+          fontWeight: FontWeight.w600,
+        ),
       ),
       textAlign: TextAlign.right,
-      onChanged: (_) => setState(() {}), // để trigger gợi ý
+      onChanged: (_) => setState(() {}),
     );
   }
 
@@ -602,7 +782,13 @@ class _IncomeModalState extends State<IncomeModal> {
       borderRadius: BorderRadius.circular(18),
       child: InputDecorator(
         decoration: _inputDeco(""),
-        child: Text(dateStr),
+        child: Text(
+          dateStr,
+          style: const TextStyle(
+            color: _title,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
     );
   }
@@ -612,20 +798,22 @@ class _IncomeModalState extends State<IncomeModal> {
       value: selectedGroupId.isEmpty ? null : selectedGroupId,
       decoration: _inputDeco("Chọn nhóm"),
       items: groups
-          .map((g) => DropdownMenuItem(
-        value: g["_id"]?.toString() ?? "",
-        child: Text((g["name"] ?? "").toString()),
-      ))
+          .map(
+            (g) => DropdownMenuItem(
+          value: g["_id"]?.toString() ?? "",
+          child: Text((g["name"] ?? "").toString()),
+        ),
+      )
           .toList(),
       onChanged: isLockedToGroup
           ? null
           : (v) async {
-              setState(() {
-                selectedGroupId = v ?? "";
-                selectedFundName = "";
-              });
-              await _loadGroupFunds();
-            },
+        setState(() {
+          selectedGroupId = v ?? "";
+          selectedFundName = "";
+        });
+        await _loadGroupFunds();
+      },
     );
   }
 
@@ -635,10 +823,12 @@ class _IncomeModalState extends State<IncomeModal> {
       decoration: _inputDeco("Chọn quỹ nhóm"),
       items: groupFunds
           .where((f) => (f["name"] ?? "").toString().isNotEmpty)
-          .map((f) => DropdownMenuItem(
-        value: f["name"].toString(),
-        child: Text(f["name"].toString()),
-      ))
+          .map(
+            (f) => DropdownMenuItem(
+          value: f["name"].toString(),
+          child: Text(f["name"].toString()),
+        ),
+      )
           .toList(),
       onChanged: (v) => setState(() => selectedFundName = v ?? ""),
     );

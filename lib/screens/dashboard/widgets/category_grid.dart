@@ -1,4 +1,3 @@
-// TODO Implement this library.
 import 'package:flutter/material.dart';
 import '../../../../models/category.dart';
 
@@ -33,50 +32,11 @@ class CategoryGrid extends StatelessWidget {
           final style = _catStyle(cat.name);
           final isSelected = selected?.id == cat.id;
 
-          return Material(
-            color: isSelected ? style.color.withOpacity(0.12) : Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTap: () => onTap(cat),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: isSelected ? style.color : Colors.transparent,
-                    width: 1.4,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x11000000),
-                      blurRadius: 14,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: style.color,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(style.icon, color: Colors.white),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      cat.name,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          return _CategoryPressCard(
+            cat: cat,
+            style: style,
+            isSelected: isSelected,
+            onTap: () => onTap(cat),
           );
         },
       ),
@@ -84,6 +44,124 @@ class CategoryGrid extends StatelessWidget {
   }
 }
 
+class _CategoryPressCard extends StatefulWidget {
+  final Category cat;
+  final _CatStyle style;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CategoryPressCard({
+    required this.cat,
+    required this.style,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  State<_CategoryPressCard> createState() => _CategoryPressCardState();
+}
+
+class _CategoryPressCardState extends State<_CategoryPressCard> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.style.color;
+
+    return GestureDetector(
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        transform: Matrix4.identity()
+          ..translate(0.0, _pressed ? 2.0 : 0.0)
+          ..scale(_pressed ? 0.965 : 1.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: widget.isSelected
+              ? color.withOpacity(0.12)
+              : Colors.white,
+          border: Border.all(
+            color: widget.isSelected ? color : const Color(0xFFE5E7EB),
+            width: widget.isSelected ? 1.5 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: widget.isSelected
+                  ? color.withOpacity(0.18)
+                  : Colors.black.withOpacity(0.06),
+              blurRadius: _pressed ? 8 : 16,
+              offset: Offset(0, _pressed ? 4 : 8),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 140),
+                curve: Curves.easeOut,
+                width: _pressed ? 42 : 46,
+                height: _pressed ? 42 : 46,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      color,
+                      color.withOpacity(0.78),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(_pressed ? 0.18 : 0.28),
+                      blurRadius: _pressed ? 8 : 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  widget.style.icon,
+                  color: Colors.white,
+                  size: _pressed ? 20 : 22,
+                ),
+              ),
+              const SizedBox(height: 10),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 120),
+                curve: Curves.easeOut,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                  color: widget.isSelected
+                      ? color
+                      : const Color(0xFF111827),
+                ),
+                child: Text(
+                  widget.cat.name,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _CatStyle {
   final IconData icon;
@@ -91,14 +169,13 @@ class _CatStyle {
   _CatStyle(this.icon, this.color);
 }
 
-// map y chang DashboardPage.jsx iconMap/gradientMap :contentReference[oaicite:18]{index=18}
 _CatStyle _catStyle(String name) {
   switch (name) {
     case "Học phí":
       return _CatStyle(Icons.school_rounded, const Color(0xFF8B5CF6));
     case "Thức ăn":
       return _CatStyle(Icons.restaurant_rounded, const Color(0xFFEF476F));
-    case "Tiền ngu":
+    case "Khác":
       return _CatStyle(Icons.bed_rounded, const Color(0xFF3B82F6));
     case "Tiền nhà":
       return _CatStyle(Icons.home_rounded, const Color(0xFFFF8A00));

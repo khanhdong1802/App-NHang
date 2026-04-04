@@ -8,21 +8,29 @@ class JarApi {
 
   Future<String?> fetchCurrentCycleId({required String token}) async {
     final uri = Uri.parse('$baseUrl/api/jars/cycle/current');
+
     final r = await http.get(uri, headers: {
       'Authorization': 'Bearer $token',
     });
 
-    if (r.statusCode == 401) {
-      throw Exception('401: Token hết hạn hoặc không hợp lệ.');
-    }
+    Map<String, dynamic>? d;
+    try {
+      d = jsonDecode(r.body);
+    } catch (_) {}
+
+    // ❗ QUAN TRỌNG: lấy message từ backend
+    final message =
+        d?['message']?.toString() ??
+            'Lỗi (${r.statusCode}) khi lấy chu kỳ';
+
     if (r.statusCode < 200 || r.statusCode >= 300) {
-      throw Exception('Không lấy được chu kỳ hiện tại.');
+      throw Exception(message);
     }
 
-    final d = jsonDecode(r.body);
     final cycle = d?['cycle'];
     final id = cycle?['_id']?.toString();
     if (id == null || id.isEmpty) return null;
+
     return id;
   }
 
@@ -41,7 +49,13 @@ class JarApi {
       body: jsonEncode({'amount': amount}),
     );
 
-    final d = jsonDecode(r.body);
+    Map<String, dynamic>? d;
+    try {
+      d = jsonDecode(r.body) as Map<String, dynamic>;
+    } catch (_) {
+      d = null;
+    }
+
     if (r.statusCode < 200 || r.statusCode >= 300 || d?['success'] != true) {
       throw Exception(d?['message']?.toString() ?? 'Nạp thất bại');
     }
@@ -52,13 +66,15 @@ class JarApi {
     required String cycleId,
   }) async {
     final uri = Uri.parse('$baseUrl/api/jars/cycle/$cycleId/apply-allocation');
-    final r = await http.post(uri, headers: {
-      'Authorization': 'Bearer $token',
-    });
+    final r = await http.post(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-    // endpoint này của bạn có thể không trả json success, nên chỉ check status code
     if (r.statusCode < 200 || r.statusCode >= 300) {
-      throw Exception('Apply allocation thất bại');
+      throw Exception('Apply allocation thất bại. Mã lỗi: ${r.statusCode}');
     }
   }
 }
