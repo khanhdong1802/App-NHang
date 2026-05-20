@@ -17,7 +17,7 @@ import 'group_room_page.dart';
 import 'transaction_history_page.dart';
 import 'stats_page.dart';
 import 'settings_page.dart';
-import '../dashboard/jar_budget_page.dart';
+
 import '../dashboard/admin_page.dart';
 import 'package:doanmonhoc/providers/chat_provider.dart';
 import 'package:provider/provider.dart';
@@ -297,13 +297,7 @@ class _DashboardPageState extends State<DashboardPage> {
           final ok = await RecordModal.open(context);
           if (ok == true) _loadAll();
         },
-        onLimit: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const JarBudgetPage()),
-          );
-          _loadAll();
-        },
+        onLimit: () => _toast("Mở Thiết lập hạn mức"),
         onChatbot: () {
           Navigator.push(
             context,
@@ -351,6 +345,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
             CategoryGrid(
               categories: categories,
+              onChanged: _loadAll,
               onTap: (cat) async {
                 final ok = await RecordModal.open(
                   context,

@@ -55,7 +55,7 @@ class _FloatingFabState extends State<FloatingFab>
       _Action("Chi tiêu", Icons.credit_card, [Colors.pink, Colors.red], widget.onExpense),
       _Action("Thu nhập", Icons.trending_up, [Colors.green, Colors.teal], widget.onIncome),
       _Action("Ghi chép", Icons.description, [Colors.indigo, Colors.purple], widget.onNote),
-      _Action("Hũ chi tiêu", Icons.flag, [Colors.orange, Colors.amber], widget.onLimit),
+
       _Action("Chatbot", Icons.smart_toy, [Colors.cyan, Colors.blue], widget.onChatbot),
     ];
 
