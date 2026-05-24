@@ -52,11 +52,10 @@ class _FloatingFabState extends State<FloatingFab>
   @override
   Widget build(BuildContext context) {
     final actions = [
-      _Action("Chi tiêu", Icons.credit_card, [Colors.pink, Colors.red], widget.onExpense),
-      _Action("Thu nhập", Icons.trending_up, [Colors.green, Colors.teal], widget.onIncome),
-      _Action("Ghi chép", Icons.description, [Colors.indigo, Colors.purple], widget.onNote),
-
-      _Action("Chatbot", Icons.smart_toy, [Colors.cyan, Colors.blue], widget.onChatbot),
+      _Action("Đặt hạn mức", Icons.tune_rounded,   [const Color(0xFF7C3AED), const Color(0xFF6366F1)], widget.onLimit),
+      _Action("Thu nhập",    Icons.trending_up,     [Colors.green, Colors.teal],                        widget.onIncome),
+      _Action("Ghi chép",    Icons.description,     [Colors.indigo, Colors.purple],                     widget.onNote),
+      _Action("Chatbot",     Icons.smart_toy,       [Colors.cyan, Colors.blue],                         widget.onChatbot),
     ];
 
     return SizedBox(

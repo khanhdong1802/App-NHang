@@ -50,14 +50,48 @@ class DashboardApi {
     return (data["total"] ?? 0) as num;
   }
 
-  Future<num> fetchSpendingLimit(String userId) async {
+  /// Gọi endpoint /summary để lấy hạn mức tổng (category = null) hiện tại.
+  /// Trả về đầy đủ dữ liệu để hiển thị và pre-fill modal chỉnh sửa.
+  /// Nếu chưa thiết lập hoặc hết hạn → trả về map với amount = 0.
+  Future<Map<String, dynamic>> fetchSpendingLimitData(String userId) async {
     final uri = Uri.parse("${ApiConfig.baseUrl}${ApiConfig
-        .apiPrefix}/spending-limit/spending-limits/$userId/current");
-    final res = await http.get(uri);
-    if (res.statusCode != 200) return 0;
-    final data = jsonDecode(res.body) as Map<String, dynamic>;
-    return (data["amount"] ?? 0) as num;
+        .apiPrefix}/spending-limit/spending-limits/$userId/summary");
+    try {
+      final res = await http.get(uri);
+      if (res.statusCode != 200) return _emptyLimit();
+      final body = jsonDecode(res.body) as Map<String, dynamic>;
+      if (body['success'] != true) return _emptyLimit();
+      final list = (body['data'] ?? []) as List<dynamic>;
+      if (list.isEmpty) return _emptyLimit();
+      // Ưu tiên hạn mức tổng (category = null), fallback về hạn mức đầu tiên
+      final raw = list.firstWhere(
+        (l) => l['category'] == null,
+        orElse: () => list.first,
+      ) as Map<String, dynamic>;
+      return {
+        'amount':        (raw['amount']        ?? 0)    as num,
+        'spent':         (raw['spent']         ?? 0)    as num,
+        'remaining':     (raw['remaining']     ?? 0)    as num,
+        'percent':       (raw['percent']       ?? 0)    as num,
+        'status':        (raw['status']        ?? '')   as String,
+        'message':       (raw['message']       ?? '')   as String,
+        'note':          (raw['note']          ?? '')   as String,
+        'months':        (raw['months']        ?? 1)    as num,
+        'alert_percent': (raw['alert_percent'] ?? 80)   as num,
+        'start_date':    raw['start_date'],
+        'end_date':      raw['end_date'],
+        'limit_id':      raw['limit_id'],
+      };
+    } catch (_) {
+      return _emptyLimit();
+    }
   }
+
+  Map<String, dynamic> _emptyLimit() => {
+    'amount': 0, 'spent': 0, 'remaining': 0, 'percent': 0,
+    'status': '', 'message': '', 'note': '', 'months': 1,
+    'alert_percent': 80, 'start_date': null, 'end_date': null, 'limit_id': null,
+  };
 
   Future<List<Map<String, dynamic>>> fetchRooms(String userId) async {
     final uri = Uri.parse("${ApiConfig.baseUrl}${ApiConfig

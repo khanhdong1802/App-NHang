@@ -72,6 +72,7 @@ class _RecordModalSheetState extends State<_RecordModalSheet> {
   bool loading = true;
   bool saving = false;
   String tab = "category"; // "user" | "category"
+  String? _errorMsg;        // lỗi hiện inline, null = không có lỗi
 
   /// Nếu modal được mở từ trang group, không cho đổi mode/group
   bool get isLockedToGroup => widget.groupId != null;
@@ -94,6 +95,13 @@ class _RecordModalSheetState extends State<_RecordModalSheet> {
       selectedGroupId = widget.groupId;
       tab = "category";
     }
+
+    // Xoá lỗi ngay khi user bắt đầu sửa số tiền
+    amountCtl.addListener(() {
+      if (_errorMsg != null && mounted) {
+        setState(() => _errorMsg = null);
+      }
+    });
 
     _init();
   }
@@ -226,7 +234,7 @@ class _RecordModalSheetState extends State<_RecordModalSheet> {
       } else { // group mode
         if (selectedGroupId == null || selectedGroupId!.isEmpty) return _toast("Vui lòng chọn nhóm!");
         if (fundId == null || fundId!.isEmpty) return _toast("Nhóm cần có quỹ để phân loại chi tiêu.");
-        if (amount > groupBalance) return _toast("Số dư nhóm không đủ: ${_fmt(groupBalance)} đ");
+        if (amount > groupBalance) { _setError('Số dư nhóm không đủ (còn ${_fmt(groupBalance)} đ)\nVui lòng nạp thêm vào quỹ nhóm.'); return; }
 
         await api.createGroupExpense(
           fundId: fundId!,
@@ -241,7 +249,15 @@ class _RecordModalSheetState extends State<_RecordModalSheet> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
-      _toast("Ghi chép thất bại: $e");
+      // Bỏ prefix "Exception: " do Dart thêm vào, lấy message thuần túy
+      final raw = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+
+      // Map server message → thông báo thân thiện (hiện inline, không dùng SnackBar)
+      if (raw.contains('không đủ') || raw.toLowerCase().contains('balance') || raw.contains('insufficient')) {
+        _setError('Số dư của bạn hiện tại không đủ\nVui lòng nạp thêm tiền vào tài khoản.');
+      } else {
+        _setError(raw.isNotEmpty ? raw : 'Ghi chép thất bại, vui lòng thử lại.');
+      }
     } finally {
       if (mounted) setState(() => saving = false);
     }
@@ -250,6 +266,12 @@ class _RecordModalSheetState extends State<_RecordModalSheet> {
   void _toast(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  /// Hiện lỗi inline (banner cố định dưới header) thay vì SnackBar.
+  void _setError(String msg) {
+    if (!mounted) return;
+    setState(() => _errorMsg = msg);
   }
 
   @override
@@ -275,6 +297,14 @@ class _RecordModalSheetState extends State<_RecordModalSheet> {
                 : Column(
               children: [
                 _header(),
+                // ── Error banner cố định, luôn hiện dù đang scroll ─────
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  child: _errorMsg != null
+                      ? _buildErrorBanner(_errorMsg!)
+                      : const SizedBox.shrink(),
+                ),
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
@@ -495,7 +525,7 @@ class _RecordModalSheetState extends State<_RecordModalSheet> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: suggestions.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (_, i) {
                 final v = suggestions[i];
                 return ActionChip(
@@ -573,40 +603,46 @@ class _RecordModalSheetState extends State<_RecordModalSheet> {
       ),
     );
   }
-}
 
-/// Chip danh mục (tối giản, bạn có thể map icon/gradient theo tên như React)
-class _CategoryChip extends StatelessWidget {
-  final String name;
-  final bool selected;
-  final VoidCallback onTap;
-  const _CategoryChip({required this.name, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = selected ? const Color(0xFF7C3AED) : const Color(0xFFE8EAF0);
-    final fg = selected ? Colors.white : Colors.black87;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 78,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: selected
-              ? [BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 12, offset: const Offset(0, 6))]
-              : null,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.category_rounded, color: fg),
-            const SizedBox(height: 6),
-            Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
-          ],
-        ),
+  // ── Error banner ─────────────────────────────────────────
+  Widget _buildErrorBanner(String msg) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFCA5A5)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 1),
+            child: Icon(Icons.error_outline_rounded,
+                color: Color(0xFFDC2626), size: 20),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              msg,
+              style: const TextStyle(
+                color: Color(0xFF991B1B),
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                height: 1.45,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => setState(() => _errorMsg = null),
+            child: const Padding(
+              padding: EdgeInsets.all(2),
+              child: Icon(Icons.close_rounded,
+                  color: Color(0xFFDC2626), size: 18),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -26,7 +26,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthService()..restoreSession()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => ChatbotProvider()),
-        ChangeNotifierProvider(create: (_) => ChatbotProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
