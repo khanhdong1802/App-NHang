@@ -24,6 +24,7 @@ import 'package:doanmonhoc/providers/chat_provider.dart';
 import 'package:doanmonhoc/providers/chatbot_provider.dart';
 import 'package:provider/provider.dart';
 import 'chatbot_screen.dart';
+import 'spending_limits_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -385,6 +386,12 @@ class _DashboardPageState extends State<DashboardPage> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const ChatbotScreen()),
+          );
+        },
+        onLimitsView: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SpendingLimitsPage()),
           );
         },
       ),

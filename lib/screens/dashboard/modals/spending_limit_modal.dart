@@ -7,10 +7,14 @@ import '../../../services/api_config.dart';
 class SpendingLimitModal {
   /// Mở modal đặt / chỉnh sửa hạn mức chi tiêu.
   /// [currentLimit] là dữ liệu từ fetchSpendingLimitData (có thể null/empty khi chưa có hạn mức).
+  /// [prefilledCategoryId] + [prefilledCategoryName] + [prefilledAmount]: dùng khi mở từ chatbot.
   static Future<bool?> open(
     BuildContext context, {
     required String userId,
     Map<String, dynamic>? currentLimit,
+    String? prefilledCategoryId,
+    String? prefilledCategoryName,
+    int?    prefilledAmount,
   }) {
     return showModalBottomSheet<bool>(
       context: context,
@@ -19,6 +23,9 @@ class SpendingLimitModal {
       builder: (_) => _SpendingLimitSheet(
         userId: userId,
         currentLimit: currentLimit,
+        prefilledCategoryId:   prefilledCategoryId,
+        prefilledCategoryName: prefilledCategoryName,
+        prefilledAmount:       prefilledAmount,
       ),
     );
   }
@@ -27,8 +34,17 @@ class SpendingLimitModal {
 class _SpendingLimitSheet extends StatefulWidget {
   final String userId;
   final Map<String, dynamic>? currentLimit;
+  final String? prefilledCategoryId;
+  final String? prefilledCategoryName;
+  final int?    prefilledAmount;
 
-  const _SpendingLimitSheet({required this.userId, this.currentLimit});
+  const _SpendingLimitSheet({
+    required this.userId,
+    this.currentLimit,
+    this.prefilledCategoryId,
+    this.prefilledCategoryName,
+    this.prefilledAmount,
+  });
 
   @override
   State<_SpendingLimitSheet> createState() => _SpendingLimitSheetState();
@@ -42,6 +58,14 @@ class _SpendingLimitSheetState extends State<_SpendingLimitSheet> {
   bool   _loading      = false;
   String? _error;
 
+  // Category
+  List<Map<String, dynamic>> _categories = [];
+  String? _selectedCategoryId;    // null = hạn mức tổng
+
+  // Khi có prefilledCategoryId (từ chatbot) → khoá, không hiện picker
+  bool get _categoryLocked =>
+      widget.prefilledCategoryId != null && widget.prefilledCategoryId!.isNotEmpty;
+
   bool get _hasExisting =>
       (widget.currentLimit?['amount'] as num? ?? 0) > 0;
 
@@ -54,7 +78,31 @@ class _SpendingLimitSheetState extends State<_SpendingLimitSheet> {
       _noteCtrl.text   = (d['note'] as String? ?? '');
       _months          = (d['months'] as num? ?? 1).toInt().clamp(1, 12);
       _alertPercent    = (d['alert_percent'] as num? ?? 80).toDouble();
+      // pre-select category của limit đang có
+      final existingCatId = d['category_id']?.toString();
+      if (existingCatId != null && existingCatId.isNotEmpty) {
+        _selectedCategoryId   = existingCatId;
+      }
+    } else if (widget.prefilledAmount != null && widget.prefilledAmount! > 0) {
+      _amountCtrl.text = widget.prefilledAmount.toString();
     }
+    _fetchCategories();
+  }
+
+  Future<void> _fetchCategories() async {
+    try {
+      final uri = Uri.parse(
+        '${ApiConfig.baseUrl}${ApiConfig.apiPrefix}/admin/categories',
+      );
+      final res = await http.get(uri);
+      if (!mounted) return;
+      if (res.statusCode == 200) {
+        final list = jsonDecode(res.body) as List<dynamic>;
+        setState(() {
+          _categories = list.cast<Map<String, dynamic>>();
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -73,7 +121,7 @@ class _SpendingLimitSheetState extends State<_SpendingLimitSheet> {
       if (i > 0 && (s.length - i) % 3 == 0) buf.write('.');
       buf.write(s[i]);
     }
-    return "${buf}đ";
+    return "$bufđ";
   }
 
   // ─── submit ─────────────────────────────────────────────────────────────────
@@ -135,6 +183,11 @@ class _SpendingLimitSheetState extends State<_SpendingLimitSheet> {
             "months":        _months,
             "note":          _noteCtrl.text.trim(),
             "alert_percent": _alertPercent.round(),
+            // Ưu tiên: 1. locked từ chatbot  2. chọn trong picker
+            if ((widget.prefilledCategoryId ?? '').isNotEmpty)
+              "category_id": widget.prefilledCategoryId
+            else if ((_selectedCategoryId ?? '').isNotEmpty)
+              "category_id": _selectedCategoryId,
           }),
         );
         if (!mounted) return;
@@ -207,9 +260,33 @@ class _SpendingLimitSheetState extends State<_SpendingLimitSheet> {
                   child: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  _hasExisting ? "Chỉnh sửa hạn mức" : "Đặt hạn mức chi tiêu",
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _hasExisting ? "Chỉnh sửa hạn mức" : "Đặt hạn mức chi tiêu",
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
+                    if (widget.prefilledCategoryName != null &&
+                        widget.prefilledCategoryName!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEDE9FE),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '📂 ${widget.prefilledCategoryName}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF7C3AED),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -254,6 +331,56 @@ class _SpendingLimitSheetState extends State<_SpendingLimitSheet> {
               ),
             ),
             const SizedBox(height: 16),
+
+            const SizedBox(height: 16),
+
+            // ── chọn danh mục ──
+            // Nếu locked từ chatbot → chỉ hiện badge, không hiện picker
+            if (_categoryLocked) ...[
+              Row(children: [
+                const Icon(Icons.category_rounded, size: 16, color: Color(0xFF7C3AED)),
+                const SizedBox(width: 6),
+                Text('Danh mục:', style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w700, fontSize: 14)),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: const Color(0xFFEDE9FE), borderRadius: BorderRadius.circular(20)),
+                  child: Text(widget.prefilledCategoryName ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF7C3AED))),
+                ),
+              ]),
+              const SizedBox(height: 16),
+            ] else if (_categories.isNotEmpty) ...[
+              Text('Danh mục', style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w700, fontSize: 14)),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 36,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    // chip "Tổng" — không gắn category
+                    _CatChip(
+                      label: 'Tổng',
+                      selected: _selectedCategoryId == null,
+                      onTap: () => setState(() => _selectedCategoryId = null),
+                    ),
+                    const SizedBox(width: 6),
+                    ..._categories.map((c) {
+                      final id   = c['_id']?.toString() ?? '';
+                      final name = c['name']?.toString() ?? '';
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: _CatChip(
+                          label: name,
+                          selected: _selectedCategoryId == id,
+                          onTap: () => setState(() => _selectedCategoryId = id),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // ── chọn kỳ hạn ──
             Text(
@@ -582,6 +709,40 @@ class _StatusCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Chip nhỏ chọn danh mục ────────────────────────────────────────────────────
+class _CatChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _CatChip({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF7C3AED) : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? const Color(0xFF7C3AED) : Colors.grey.shade300,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : Colors.grey.shade700,
+          ),
+        ),
       ),
     );
   }

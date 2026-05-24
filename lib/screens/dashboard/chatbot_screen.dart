@@ -10,7 +10,9 @@ import 'package:provider/provider.dart';
 
 // ChatMessage và ChatbotProvider được import từ một nơi duy nhất
 import '../../providers/chatbot_provider.dart';
+import '../../services/auth_service.dart';
 import 'modals/record_modal.dart';
+import 'modals/spending_limit_modal.dart';
 
 // ══════════════════════════════════════════════════════════════
 //  SCREEN
@@ -93,6 +95,301 @@ class _ChatbotScreenState extends State<ChatbotScreen>
   }
 
   // ══════════════════════════════════════════════════════════
+  //  ANALYZE SPENDING — gọi route riêng có data thực từ DB
+  // ══════════════════════════════════════════════════════════
+  bool _isSpendingAnalysisRequest(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('phân tích chi tiêu') ||
+        lower.contains('chi tiêu tháng') ||
+        lower.contains('tháng này chi') ||
+        lower.contains('báo cáo chi tiêu');
+  }
+
+  bool _isSavingAdviceRequest(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('tiết kiệm') ||
+        lower.contains('lời khuyên') && lower.contains('tiền') ||
+        lower.contains('cách tiết kiệm');
+  }
+
+  bool _isBudgetAdviceRequest(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('hạn mức') ||
+        lower.contains('ngân sách') ||
+        lower.contains('đặt giới hạn') ||
+        lower.contains('budget');
+  }
+
+  Future<void> _analyzeSpending() async {
+    final bot = context.read<ChatbotProvider>();
+    if (bot.isSending) return;
+
+    // Build history TRƯỚC khi thêm tin mới
+    final history = bot.messages
+        .where((m) => !m.isLoading)
+        .map((m) => {'role': m.isUser ? 'user' : 'assistant', 'content': m.content})
+        .toList();
+
+    const userText = 'Phân tích chi tiêu tháng này';
+    final loadingMsg = ChatMessage(content: '', isUser: false, isLoading: true);
+    bot.addMessages([ChatMessage(content: userText, isUser: true), loadingMsg]);
+    bot.setSending(true);
+    _controller.clear();
+    _scrollToBottom();
+
+    try {
+      final token = await _storage.read(key: 'token');
+
+      final res = await http
+          .post(
+            Uri.parse('$_baseUrl/chatbot/analyze-spending'),
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'history': history}),
+          )
+          .timeout(const Duration(seconds: 45));
+
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+
+      if (res.statusCode >= 400) {
+        final errMsg = data['error'] ?? data['message'] ?? 'Lỗi server (${res.statusCode})';
+        bot.replaceLastWith(ChatMessage(content: '❌ $errMsg', isUser: false));
+        return;
+      }
+
+      final reply = data['reply'] as String? ??
+          'Xin lỗi, không thể phân tích lúc này. Vui lòng thử lại.';
+      bot.replaceLastWith(ChatMessage(content: reply, isUser: false));
+    } on TimeoutException {
+      bot.replaceLastWith(ChatMessage(
+        content: '⏱ Phân tích mất quá nhiều thời gian.\nVui lòng thử lại sau giây lát.',
+        isUser: false,
+      ));
+    } on http.ClientException catch (e) {
+      debugPrint('ClientException (analyze): $e');
+      bot.replaceLastWith(ChatMessage(
+        content: '❌ Không thể kết nối server.',
+        isUser: false,
+      ));
+    } catch (e) {
+      debugPrint('Analyze spending error: $e');
+      bot.replaceLastWith(ChatMessage(
+        content: '❌ Lỗi: ${e.runtimeType}. Vui lòng thử lại.',
+        isUser: false,
+      ));
+    } finally {
+      bot.setSending(false);
+      _scrollToBottom();
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  SAVING ADVICE — lời khuyên tiết kiệm cá nhân hoá
+  // ══════════════════════════════════════════════════════════
+  Future<void> _savingAdvice() async {
+    final bot = context.read<ChatbotProvider>();
+    if (bot.isSending) return;
+
+    final history = bot.messages
+        .where((m) => !m.isLoading)
+        .map((m) => {'role': m.isUser ? 'user' : 'assistant', 'content': m.content})
+        .toList();
+
+    const userText = 'Lời khuyên tiết kiệm tiền';
+    final loadingMsg = ChatMessage(content: '', isUser: false, isLoading: true);
+    bot.addMessages([ChatMessage(content: userText, isUser: true), loadingMsg]);
+    bot.setSending(true);
+    _controller.clear();
+    _scrollToBottom();
+
+    try {
+      final token = await _storage.read(key: 'token');
+
+      final res = await http
+          .post(
+            Uri.parse('$_baseUrl/chatbot/saving-advice'),
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'history': history}),
+          )
+          .timeout(const Duration(seconds: 45));
+
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+
+      if (res.statusCode >= 400) {
+        final errMsg = data['error'] ?? data['message'] ?? 'Lỗi server (${res.statusCode})';
+        bot.replaceLastWith(ChatMessage(content: '❌ $errMsg', isUser: false));
+        return;
+      }
+
+      final reply = data['reply'] as String? ??
+          'Xin lỗi, không thể đưa ra lời khuyên lúc này.';
+      bot.replaceLastWith(ChatMessage(content: reply, isUser: false));
+    } on TimeoutException {
+      bot.replaceLastWith(ChatMessage(
+        content: '⏱ Mất quá nhiều thời gian. Vui lòng thử lại.',
+        isUser: false,
+      ));
+    } on http.ClientException catch (e) {
+      debugPrint('ClientException (saving-advice): $e');
+      bot.replaceLastWith(ChatMessage(
+        content: '❌ Không thể kết nối server.',
+        isUser: false,
+      ));
+    } catch (e) {
+      debugPrint('Saving advice error: $e');
+      bot.replaceLastWith(ChatMessage(
+        content: '❌ Lỗi: ${e.runtimeType}. Vui lòng thử lại.',
+        isUser: false,
+      ));
+    } finally {
+      bot.setSending(false);
+      _scrollToBottom();
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  BUDGET ADVICE — tư vấn đặt hạn mức dựa trên TB 3 tháng
+  // ══════════════════════════════════════════════════════════
+  Future<void> _budgetAdvice() async {
+    final bot = context.read<ChatbotProvider>();
+    if (bot.isSending) return;
+
+    final history = bot.messages
+        .where((m) => !m.isLoading)
+        .map((m) => {'role': m.isUser ? 'user' : 'assistant', 'content': m.content})
+        .toList();
+
+    const userText = 'Cách đặt hạn mức ngân sách';
+    final loadingMsg = ChatMessage(content: '', isUser: false, isLoading: true);
+    bot.addMessages([ChatMessage(content: userText, isUser: true), loadingMsg]);
+    bot.setSending(true);
+    _controller.clear();
+    _scrollToBottom();
+
+    try {
+      final token = await _storage.read(key: 'token');
+
+      final res = await http
+          .post(
+            Uri.parse('$_baseUrl/chatbot/budget-advice'),
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'history': history}),
+          )
+          .timeout(const Duration(seconds: 45));
+
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+
+      if (res.statusCode >= 400) {
+        final errMsg = data['error'] ?? data['message'] ?? 'Lỗi server (${res.statusCode})';
+        bot.replaceLastWith(ChatMessage(content: '❌ $errMsg', isUser: false));
+        return;
+      }
+
+      final reply = data['reply'] as String? ??
+          'Xin lỗi, không thể tư vấn hạn mức lúc này.';
+
+      final rawSuggestions = data['suggestions'] as List<dynamic>? ?? [];
+      final suggestions = rawSuggestions
+          .whereType<Map<String, dynamic>>()
+          .where((s) =>
+              (s['category_id'] as String? ?? '').isNotEmpty &&
+              (s['suggested_amount'] as num? ?? 0) > 0)
+          .toList();
+
+      if (suggestions.isNotEmpty) {
+        // Hiển thị advice text + action message với nút đặt hạn mức
+        bot.replaceLastWithMany([
+          ChatMessage(content: reply, isUser: false),
+          ChatMessage(
+            content: 'Bạn muốn đặt hạn mức ngay không? 📌',
+            isUser: false,
+            actionType: 'set_limits',
+            actionData: {'suggestions': suggestions},
+          ),
+        ]);
+      } else {
+        bot.replaceLastWith(ChatMessage(content: reply, isUser: false));
+      }
+    } on TimeoutException {
+      bot.replaceLastWith(ChatMessage(
+        content: '⏱ Mất quá nhiều thời gian. Vui lòng thử lại.',
+        isUser: false,
+      ));
+    } on http.ClientException catch (e) {
+      debugPrint('ClientException (budget-advice): $e');
+      bot.replaceLastWith(ChatMessage(
+        content: '❌ Không thể kết nối server.',
+        isUser: false,
+      ));
+    } catch (e) {
+      debugPrint('Budget advice error: $e');
+      bot.replaceLastWith(ChatMessage(
+        content: '❌ Lỗi: ${e.runtimeType}. Vui lòng thử lại.',
+        isUser: false,
+      ));
+    } finally {
+      bot.setSending(false);
+      _scrollToBottom();
+    }
+  }
+
+  // ── Đặt hạn mức từ gợi ý chatbot ────────────────────────
+  Future<void> _onSetLimit(ChatMessage msg, Map<String, dynamic> suggestion) async {
+    if (!mounted) return;
+    final bot    = context.read<ChatbotProvider>();
+    final userId = await context.read<AuthService>().getUserId() ?? '';
+    if (userId.isEmpty || !mounted) return;
+
+    final catId   = suggestion['category_id']   as String? ?? '';
+    final catName = suggestion['category_name']  as String? ?? '';
+    final amount  = (suggestion['suggested_amount'] as num?)?.toInt() ?? 0;
+
+    final ok = await SpendingLimitModal.open(
+      context,
+      userId:                userId,
+      prefilledCategoryId:   catId.isNotEmpty   ? catId   : null,
+      prefilledCategoryName: catName.isNotEmpty ? catName : null,
+      prefilledAmount:       amount > 0         ? amount  : null,
+    );
+
+    if (!mounted) return;
+    if (ok == true) {
+      // Lấy danh sách suggestions còn lại (bỏ cái vừa đặt)
+      final remaining = (msg.actionData!['suggestions'] as List)
+          .whereType<Map<String, dynamic>>()
+          .where((s) => s['category_id'] != catId)
+          .toList();
+
+      if (remaining.isEmpty) {
+        bot.replaceMessage(
+          msg,
+          ChatMessage(content: '✅ Đã đặt xong tất cả hạn mức!', isUser: false),
+        );
+      } else {
+        // Cập nhật lại message, bỏ nút vừa đặt
+        bot.replaceMessage(
+          msg,
+          ChatMessage(
+            content: '✅ Đã đặt hạn mức $catName!\nCòn ${remaining.length} danh mục khác:',
+            isUser: false,
+            actionType: 'set_limits',
+            actionData: {'suggestions': remaining},
+          ),
+        );
+      }
+      _scrollToBottom();
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
   //  SEND MESSAGE
   // ══════════════════════════════════════════════════════════
   Future<void> _sendMessage(String text) async {
@@ -100,6 +397,24 @@ class _ChatbotScreenState extends State<ChatbotScreen>
     if (text.trim().isEmpty || bot.isSending) return;
 
     final trimmed = text.trim();
+
+    // Nếu user hỏi phân tích chi tiêu → gọi route có data thật
+    if (_isSpendingAnalysisRequest(trimmed)) {
+      await _analyzeSpending();
+      return;
+    }
+
+    // Nếu user hỏi lời khuyên tiết kiệm → gọi route có data thật
+    if (_isSavingAdviceRequest(trimmed)) {
+      await _savingAdvice();
+      return;
+    }
+
+    // Nếu user hỏi cách đặt hạn mức → gọi route có data thật
+    if (_isBudgetAdviceRequest(trimmed)) {
+      await _budgetAdvice();
+      return;
+    }
 
     // Build lịch sử trước khi thêm tin mới
     final history = bot.messages
@@ -619,6 +934,10 @@ class _ChatbotScreenState extends State<ChatbotScreen>
             const SizedBox(height: 12),
             _buildRecordButtons(msg),
           ],
+          if (msg.actionType == 'set_limits') ...[
+            const SizedBox(height: 12),
+            _buildSetLimitsButtons(msg),
+          ],
         ],
       ),
     );
@@ -700,6 +1019,46 @@ class _ChatbotScreenState extends State<ChatbotScreen>
     );
   }
 
+  // ── Nút đặt hạn mức ngay từ gợi ý chatbot ───────────────
+  Widget _buildSetLimitsButtons(ChatMessage msg) {
+    final suggestions = (msg.actionData?['suggestions'] as List<dynamic>? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
+    if (suggestions.isEmpty) return const SizedBox.shrink();
+
+    String fmtMoney(int v) {
+      if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(v % 1000000 == 0 ? 0 : 1)}tr';
+      if (v >= 1000)    return '${(v / 1000).toStringAsFixed(0)}k';
+      return '$v đ';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: suggestions.map((s) {
+        final catName = s['category_name'] as String? ?? '';
+        final amount  = (s['suggested_amount'] as num?)?.toInt() ?? 0;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: FilledButton.icon(
+            onPressed: () => _onSetLimit(msg, s),
+            icon: const Icon(Icons.tune_rounded, size: 16),
+            label: Text(
+              '📌 Đặt hạn mức $catName: ${fmtMoney(amount)}',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF7C3AED),
+              foregroundColor: Colors.white,
+              minimumSize: const Size(0, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildQuickSuggestions() {
     return SizedBox(
       height: 38,
@@ -711,9 +1070,19 @@ class _ChatbotScreenState extends State<ChatbotScreen>
         itemBuilder: (_, i) {
           final (emoji, label) = _suggestions[i];
           return GestureDetector(
-            onTap: () => label == 'Scan hoá đơn'
-                ? _scanReceipt()
-                : _sendMessage(label),
+            onTap: () {
+              if (label == 'Scan hoá đơn') {
+                _scanReceipt();
+              } else if (label == 'Phân tích chi tiêu tháng này') {
+                _analyzeSpending();
+              } else if (label == 'Lời khuyên tiết kiệm tiền') {
+                _savingAdvice();
+              } else if (label == 'Cách đặt hạn mức ngân sách') {
+                _budgetAdvice();
+              } else {
+                _sendMessage(label);
+              }
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(

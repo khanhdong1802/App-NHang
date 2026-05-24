@@ -189,11 +189,6 @@ class _DashboardDrawerState extends State<DashboardDrawer> {
                     const SizedBox(height: 4),
 
                     _Item(
-                      icon: Icons.qr_code_rounded,
-                      text: "QR Code",
-                      onTap: () {},
-                    ),
-                    _Item(
                       icon: Icons.history_rounded,
                       text: "Lịch sử giao dịch",
                       onTap: widget.onGoHistory,

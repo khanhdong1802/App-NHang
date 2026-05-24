@@ -10,6 +10,7 @@ import 'group_members_page.dart';
 import '../dashboard/group_chat_screen.dart';
 import 'group_transaction_history_page.dart';
 import 'chatbot_screen.dart';
+import 'spending_limits_page.dart';
 class GroupRoomPage extends StatefulWidget {
   final String groupId;
   final Future<String?> Function()? tokenProvider;
@@ -155,6 +156,12 @@ class _GroupRoomPageState extends State<GroupRoomPage> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const ChatbotScreen()),
+          );
+        },
+        onLimitsView: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SpendingLimitsPage()),
           );
         },
       ),

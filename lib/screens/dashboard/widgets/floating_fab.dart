@@ -8,6 +8,7 @@ class FloatingFab extends StatefulWidget {
   final VoidCallback onNote;
   final VoidCallback onLimit;
   final VoidCallback onChatbot;
+  final VoidCallback onLimitsView;
 
   const FloatingFab({
     super.key,
@@ -17,6 +18,7 @@ class FloatingFab extends StatefulWidget {
     required this.onNote,
     required this.onLimit,
     required this.onChatbot,
+    required this.onLimitsView,
   });
 
   @override
@@ -52,15 +54,16 @@ class _FloatingFabState extends State<FloatingFab>
   @override
   Widget build(BuildContext context) {
     final actions = [
-      _Action("Đặt hạn mức", Icons.tune_rounded,   [const Color(0xFF7C3AED), const Color(0xFF6366F1)], widget.onLimit),
-      _Action("Thu nhập",    Icons.trending_up,     [Colors.green, Colors.teal],                        widget.onIncome),
-      _Action("Ghi chép",    Icons.description,     [Colors.indigo, Colors.purple],                     widget.onNote),
-      _Action("Chatbot",     Icons.smart_toy,       [Colors.cyan, Colors.blue],                         widget.onChatbot),
+      _Action("Đặt hạn mức", Icons.tune_rounded,        [const Color(0xFF7C3AED), const Color(0xFF6366F1)], widget.onLimit),
+      _Action("Thu nhập",    Icons.trending_up,          [Colors.green, Colors.teal],                        widget.onIncome),
+      _Action("Ghi chép",    Icons.description,          [Colors.indigo, Colors.purple],                     widget.onNote),
+      _Action("Chatbot",     Icons.smart_toy,            [Colors.cyan, Colors.blue],                         widget.onChatbot),
+      _Action("Hạn Mức",    Icons.donut_large_rounded,  [const Color(0xFFF59E0B), const Color(0xFFEF4444)], widget.onLimitsView),
     ];
 
     return SizedBox(
       width: 260,
-      height: 450,
+      height: 510,
       child: Stack(
         alignment: Alignment.bottomRight,
         clipBehavior: Clip.none,
